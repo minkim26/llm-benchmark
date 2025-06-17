@@ -85,6 +85,12 @@ Make sure both endpoints expose the `/v1/chat/completions` API.
 ./bench.sh --engine vllm
 ```
 
+#### ⚙️ Customize Tokens and Temperature
+
+```bash
+./bench.sh --tokens 128,256 --temperature 0.9 --requests 10
+```
+
 #### 📖 Show Help / Usage Options
 
 ```bash
@@ -98,7 +104,7 @@ Make sure both endpoints expose the `/v1/chat/completions` API.
 Benchmarks are saved to:
 
 ```bash
-./benchmarks/benchmarkresultsYYYYMMDD_HHMMSS/
+./logs/benchmarkresultsYYYYMMDD_HHMMSS/
 ```
 
 Includes:
