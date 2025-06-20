@@ -186,6 +186,10 @@ run_test_batch() {
     sum_tps=0; for rate in "${token_rates[@]}"; do sum_tps=$(echo "$sum_tps + $rate" | bc); done
     avg_tps=$(echo "scale=5; $sum_tps / $success_count" | bc -l)
 
+    # Format min and max times to 5 decimal places
+    min_time=$(printf "%.5f" $min_time)
+    max_time=$(printf "%.5f" $max_time)
+
     initialize_logging
     echo "$engine_name,$prompt_type,$max_tokens,$success_count,$REQUESTS_PER_TEST,$avg_time,$min_time,$max_time,$avg_tokens,$avg_tps" >> "$OUTPUT_DIR/results.csv"
 }
