@@ -25,8 +25,8 @@ COMPLEX_PROMPT="Explain how machine learning works in simple terms with examples
 ENGINE="both"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 OUTPUT_DIR="./logs/benchmarkresults$TIMESTAMP"
-mkdir -p "$OUTPUT_DIR"
 LOG_FILE="$OUTPUT_DIR/benchmark.log"
+LOGGING_INITIALIZED=false
 
 # Color codes
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; BLUE='\033[0;34m'; NC='\033[0m'
@@ -68,7 +68,15 @@ parse_args() {
 # ─────────────────────────────────────────────────────────────
 # LOGGING UTILITIES
 # ─────────────────────────────────────────────────────────────
+initialize_logging() {
+    if [[ "$LOGGING_INITIALIZED" == false ]]; then
+        mkdir -p "$OUTPUT_DIR"
+        LOGGING_INITIALIZED=true
+    fi
+}
+
 log() {
+    initialize_logging
     echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" | tee -a "$LOG_FILE"
 }
 
@@ -173,11 +181,12 @@ run_test_batch() {
         fi
     done
 
-    avg_time=$(echo "$total_time / $success_count" | bc -l)
+    avg_time=$(echo "scale=5; $total_time / $success_count" | bc -l)
     avg_tokens=$((total_tokens / success_count))
     sum_tps=0; for rate in "${token_rates[@]}"; do sum_tps=$(echo "$sum_tps + $rate" | bc); done
-    avg_tps=$(echo "$sum_tps / $success_count" | bc -l)
+    avg_tps=$(echo "scale=5; $sum_tps / $success_count" | bc -l)
 
+    initialize_logging
     echo "$engine_name,$prompt_type,$max_tokens,$success_count,$REQUESTS_PER_TEST,$avg_time,$min_time,$max_time,$avg_tokens,$avg_tps" >> "$OUTPUT_DIR/results.csv"
 }
 
@@ -196,6 +205,7 @@ main() {
     [[ "$ENGINE" == "llama" || "$ENGINE" == "both" ]] && test_endpoint "$LLAMACPP_ENDPOINT" "llama.cpp"
     [[ "$ENGINE" == "vllm"  || "$ENGINE" == "both" ]] && test_endpoint "$VLLM_ENDPOINT" "vLLM"
 
+    initialize_logging
     echo "Engine,Prompt_Type,Max_Tokens,Successful_Requests,Total_Requests,Avg_Response_Time,Min_Response_Time,Max_Response_Time,Avg_Tokens,Avg_Tokens_Per_Second" > "$OUTPUT_DIR/results.csv"
 
     for tokens in "${TOKEN_LIST[@]}"; do
